@@ -1,0 +1,60 @@
+---
+version: '3'
+
+services:
+  redis:
+    build:
+      context: redis
+    command: --port 6379 --dir /data --bind 0.0.0.0 --timeout 300 --tcp-keepalive 60 --loglevel notice --databases 16 --maxclients 2048 --maxmemory 512mb --maxmemory-policy volatile-lru
+    ## no --logfile, since logs shall go to stdout/stderr
+    ## --appendonly yes (creates appendonly.aof)
+    ## syslog-enabled yes
+    ## syslog-ident redis
+    ## syslog-facility local0
+    ## loglevel
+    ## debug (a lot of information, useful for development/testing)
+    ## verbose (many rarely useful info, but not a mess like the debug level)
+    ## notice (moderately verbose, what you want in production probably)
+    ## warning (only very important / critical messages are logged)
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    environment:
+      REDIS_PASSWORD: main
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+  redis1:
+    build:
+      context: redis
+    command: --port 6380 --slaveof redis 6379 --dir /data --bind 0.0.0.0 --timeout 300 --tcp-keepalive 60 --loglevel notice --databases 16 --maxclients 2048 --maxmemory 512mb --maxmemory-policy volatile-lru
+    ## no --logfile, since logs shall go to stdout/stderr
+    ## --appendonly yes (creates appendonly.aof)
+    ## syslog-enabled yes
+    ## syslog-ident redis
+    ## syslog-facility local0
+    ## loglevel
+    ## debug (a lot of information, useful for development/testing)
+    ## verbose (many rarely useful info, but not a mess like the debug level)
+    ## notice (moderately verbose, what you want in production probably)
+    ## warning (only very important / critical messages are logged)
+    volumes:
+      - redis_data1:/data
+    expose:
+      - "6380"
+    environment:
+      REDIS_MASTER_PASSWORD: main
+      REDIS_PASSWORD: second
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+volumes:
+  redis_data:
+  redis_data1:
